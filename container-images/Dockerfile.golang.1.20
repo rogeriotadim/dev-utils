@@ -46,7 +46,8 @@ RUN git config --global http.sslVerify false \
     && git config --global alias.lg "log --color --graph --abbrev-commit --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'" \
     && touch ~/.my-credentials \
     && git config --global credential.helper 'store --file ~/.my-credentials' \
-    && git config --global core.pager cat
+    && git config --global core.pager cat \
+    && git config --global --add safe.directory /go/src
 
 WORKDIR /go/src
 

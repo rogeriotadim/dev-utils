@@ -1,4 +1,5 @@
 #!/bin/bash
 
 ### run
-tail -f /dev/null
+#tail -f /dev/null
+sleep infinity
