@@ -1,0 +1,56 @@
+# build environment
+FROM golang:1.21.4-bookworm
+LABEL maintainer 'rogerio.tadim'
+
+RUN groupadd --gid 1000 golang \
+  && useradd --uid 1000 --gid golang --shell /bin/bash --create-home golang
+
+# ### VSCODE
+RUN mkdir -p /opt/app-root/src \
+  && chown -R 1000:1000 "/opt/app-root/src"
+
+
+RUN apt update && apt install --yes sqlite3 jq git
+
+COPY ./files/entrypoint.sh  /usr/local/sbin/entrypoint.sh
+
+RUN chown -R 1000:1000 "/go"
+
+USER golang
+
+RUN go install -v github.com/cweill/gotests/gotests@latest \
+  && go install -v github.com/fatih/gomodifytags@latest \
+  && go install -v github.com/josharian/impl@latest \
+  && go install -v github.com/haya14busa/goplay/cmd/goplay@latest \
+  && go install -v honnef.co/go/tools/cmd/staticcheck@latest \
+  && go install -v golang.org/x/tools/gopls@latest \
+  && go install -v github.com/ramya-rao-a/go-outline@latest \
+  && go install -v github.com/spf13/cobra-cli@latest \
+  && go install -v github.com/cosmtrek/air@latest \
+  && go install -v github.com/go-delve/delve/cmd/dlv@latest
+
+#RUN go install -v github.com/kyleconroy/sqlc/cmd/sqlc@latest
+
+RUN cd /tmp \
+  && curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz \
+  && rm -rf LICENSE README.md \
+  && mv migrate /go/bin
+
+COPY ./files/.bash_aliases  /home/golang
+
+RUN git config --global http.sslVerify false \
+    && git config --global user.name "Rogerio Tadim" \
+    && git config --global user.email "rogeriotadim@gmail.com" \
+    && git config --global alias.co checkout \
+    && git config --global alias.cm commit \
+    && git config --global alias.st status \
+    && git config --global alias.lg "log --color --graph --abbrev-commit --pretty=format:'%Cred%h%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset'" \
+    && touch ~/.my-credentials \
+    && git config --global credential.helper 'store --file ~/.my-credentials' \
+    && git config --global core.pager cat \
+    && git config --global --add safe.directory /go/src
+    
+WORKDIR /go/src
+
+CMD ["entrypoint.sh"]
+
